@@ -1,22 +1,27 @@
 'use client';
 import { useState } from 'react';
 
+interface Task {
+    _id: string;
+    title: string;
+}
+
 interface ToDoListProps {
-    tasks: string[];
-    onDeleteTask: (index: number) => void;
-    onEditTask: (index: number, updatedTask: string) => void;
+    tasks: Task[];
+    onDeleteTask: (id: string) => void;
+    onEditTask: (id: string, updatedTask: string) => void;
 }
 
 const ToDoList = ({ tasks, onDeleteTask, onEditTask }: ToDoListProps) => {
-    const [currentTaskIndex, setCurrentTaskIndex] = useState<number | null>(null);
+    const [currentTaskId, setCurrentTaskId] = useState<string | null>(null);
     const [currentTask, setCurrentTask] = useState<string>('');
 
-    const handleEdit = (index: number) => {
+    const handleEdit = (id: string) => {
         if (currentTask.trim()) {
-            console.log(`Updating task at index ${index} with value: ${currentTask}`);
-            onEditTask(index, currentTask);
+            console.log(`Updating task with ID ${id} with value: ${currentTask}`);
+            onEditTask(id, currentTask);
             setCurrentTask('');
-            setCurrentTaskIndex(null);
+            setCurrentTaskId(null);
         } else {
             console.error("Cannot save an empty task");
         }
@@ -24,7 +29,7 @@ const ToDoList = ({ tasks, onDeleteTask, onEditTask }: ToDoListProps) => {
 
     const handleCancelEdit = () => {
         setCurrentTask('');
-        setCurrentTaskIndex(null);
+        setCurrentTaskId(null);
     };
 
     return (
@@ -32,9 +37,9 @@ const ToDoList = ({ tasks, onDeleteTask, onEditTask }: ToDoListProps) => {
             {tasks.length === 0 ? (
                 <li className="p-2 text-gray-500">Add tasks to get started ✨</li>
             ) : (
-                tasks.map((task, i) => (
-                    <li key={i} className="border-b p-2 flex justify-between">
-                        {currentTaskIndex === i ? (
+                tasks.map((task) => (
+                    <li key={task._id} className="border-b p-2 flex justify-between">
+                        {currentTaskId === task._id ? (
                             <>
                                 <input
                                     type='text'
@@ -44,7 +49,7 @@ const ToDoList = ({ tasks, onDeleteTask, onEditTask }: ToDoListProps) => {
                                     placeholder="Edit task..."
                                 />
                                 <button
-                                    onClick={() => handleEdit(i)}
+                                    onClick={() => handleEdit(task._id)}
                                     className='btn btn-outline btn-success ml-2'
                                 >
                                     Save
@@ -58,12 +63,12 @@ const ToDoList = ({ tasks, onDeleteTask, onEditTask }: ToDoListProps) => {
                             </>
                         ) : (
                             <>
-                                <span>{task}</span>
+                                <span>{task.title}</span>
                                 <div>
                                     <button
                                         onClick={() => {
-                                            setCurrentTask(task);
-                                            setCurrentTaskIndex(i);
+                                            setCurrentTask(task.title);
+                                            setCurrentTaskId(task._id);
                                         }}
                                         className='btn btn-outline btn-info ml-2'
                                     >
@@ -71,7 +76,7 @@ const ToDoList = ({ tasks, onDeleteTask, onEditTask }: ToDoListProps) => {
                                     </button>
                                     <button
                                         className='btn btn-outline btn-error ml-2'
-                                        onClick={() => onDeleteTask(i)}
+                                        onClick={() => onDeleteTask(task._id)}
                                     >
                                         Delete
                                     </button>

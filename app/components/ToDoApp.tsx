@@ -4,7 +4,7 @@ import AddTaskForm from './AddTaskForm';
 import ToDoList from './ToDoList';
 
 const ToDoApp = () => {
-    const [tasks, setTasks] = useState<string[]>([]);
+    const [tasks, setTasks] = useState<any[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -33,11 +33,12 @@ const ToDoApp = () => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ task }),
+                body: JSON.stringify({ title: task }),
             });
 
             if (!response.ok) throw new Error('Failed to add task');
-            setTasks((prevTasks) => [...prevTasks, task]);
+            const data = await response.json();
+            setTasks((prevTasks) => [...prevTasks, data]);
         } catch (error: unknown) {
             if (error instanceof Error) {
                 setError(error.message);
@@ -48,18 +49,19 @@ const ToDoApp = () => {
         }
     };
 
-    const deleteTask = async (index: number) => {
+    const deleteTask = async (id: string) => {
         try {
             const response = await fetch('/api/tasks', {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ index }),
+                body: JSON.stringify({ id }),
             });
 
             if (!response.ok) throw new Error('Failed to delete task');
-            setTasks((prevTasks) => prevTasks.filter((_, i) => i !== index));
+
+            setTasks((prevTasks) => prevTasks.filter(task => task._id !== id));
         } catch (error: unknown) {
             if (error instanceof Error) {
                 setError(error.message);
@@ -70,7 +72,8 @@ const ToDoApp = () => {
         }
     };
 
-    const editTask = async (index: number, updatedTask: string) => {
+
+    const editTask = async (id: string, updatedTask: string) => {
         if (!updatedTask.trim()) {
             console.error("Task cannot be empty");
             return;
@@ -82,14 +85,15 @@ const ToDoApp = () => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ index, updatedTask }),
+                body: JSON.stringify({ id, title: updatedTask }),
             });
+
 
             if (!response.ok) throw new Error('Failed to update task');
             setTasks((prevTasks) => {
-                const newTasks = [...prevTasks];
-                newTasks[index] = updatedTask;
-                return newTasks;
+                return prevTasks.map(task =>
+                    task._id === id ? { ...task, title: updatedTask } : task
+                );
             });
         } catch (error: unknown) {
             if (error instanceof Error) {
@@ -100,6 +104,7 @@ const ToDoApp = () => {
             console.error("Error updating task:", error);
         }
     };
+
 
     useEffect(() => {
         fetchTasks();
@@ -115,5 +120,6 @@ const ToDoApp = () => {
         </div>
     );
 };
+
 
 export default ToDoApp;
